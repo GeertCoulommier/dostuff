@@ -1,121 +1,124 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DoStuff — Task Manager</title>
-  <link rel="stylesheet" href="/css/styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DoStuff — Task Manager</title>
+    <link rel="stylesheet" href="/css/styles.css" />
 </head>
+
 <body>
 
-  <!-- ── Header ─────────────────────────────────────────────────── -->
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">
-        <span class="logo-icon">✅</span>
-        <span class="logo-text">DoStuff</span>
-      </div>
-      <div class="header-stats" id="headerStats">
-        <span class="stat"><span id="statTotal">0</span> tasks</span>
-        <span class="stat done"><span id="statDone">0</span> done</span>
-        <span class="stat pending"><span id="statPending">0</span> pending</span>
-      </div>
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">✅</span>
+                <span class="logo-text">DoStuff</span>
+            </div>
+            <div class="header-stats" id="headerStats">
+                <span class="stat"><span id="statTotal">0</span> tasks</span>
+                <span class="stat done"><span id="statDone">0</span> done</span>
+                <span class="stat pending"><span id="statPending">0</span> pending</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Main ───────────────────────────────────────────────────── -->
+    <main class="main">
+
+        <!-- Add Task Form -->
+        <section class="card form-card" aria-label="Add new task">
+            <h2 class="card-title">Add a Task</h2>
+            <form id="addForm" class="add-form" novalidate>
+                <div class="form-row">
+                    <div class="field grow">
+                        <label for="inputTitle">Title <span class="req">*</span></label>
+                        <input id="inputTitle" type="text" placeholder="What needs doing?" maxlength="255" required />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="inputPriority">Priority</label>
+                        <select id="inputPriority">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium" selected>🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="inputDeadline">Deadline</label>
+                        <input id="inputDeadline" type="date" />
+                    </div>
+                    <div class="field submit-field">
+                        <label class="sr-only" for="btnAdd">Submit</label>
+                        <button id="btnAdd" type="submit" class="btn btn-primary">＋ Add</button>
+                    </div>
+                </div>
+                <p class="form-error" id="formError" role="alert" hidden></p>
+            </form>
+        </section>
+
+        <!-- Filter bar -->
+        <section class="filter-bar" aria-label="Filter tasks">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="pending">Pending</button>
+            <button class="filter-btn" data-filter="done">Done</button>
+            <span class="filter-sep">|</span>
+            <button class="filter-btn" data-priority="low">🟢 Low</button>
+            <button class="filter-btn" data-priority="medium">🟡 Medium</button>
+            <button class="filter-btn" data-priority="high">🔴 High</button>
+            <button class="filter-btn clear-priority" id="clearPriority" hidden>✕ Priority</button>
+        </section>
+
+        <!-- Task list -->
+        <section aria-label="Task list">
+            <div id="taskList" class="task-list"></div>
+            <p id="emptyMsg" class="empty-msg" hidden>No tasks here yet!</p>
+            <div id="loadingMsg" class="loading-msg">Loading…</div>
+        </section>
+
+    </main>
+
+    <!-- ── Edit Modal ─────────────────────────────────────────────── -->
+    <div id="editModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Edit task" hidden>
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+            <h3 class="modal-title">Edit Task</h3>
+            <form id="editForm" novalidate>
+                <input type="hidden" id="editId" />
+                <div class="field">
+                    <label for="editTitle">Title <span class="req">*</span></label>
+                    <input id="editTitle" type="text" maxlength="255" required />
+                </div>
+                <div class="form-row">
+                    <div class="field">
+                        <label for="editPriority">Priority</label>
+                        <select id="editPriority">
+                            <option value="low">🟢 Low</option>
+                            <option value="medium">🟡 Medium</option>
+                            <option value="high">🔴 High</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="editDeadline">Deadline</label>
+                        <input id="editDeadline" type="date" />
+                    </div>
+                </div>
+                <p class="form-error" id="editError" role="alert" hidden></p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </header>
 
-  <!-- ── Main ───────────────────────────────────────────────────── -->
-  <main class="main">
+    <!-- ── Toast ──────────────────────────────────────────────────── -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-    <!-- Add Task Form -->
-    <section class="card form-card" aria-label="Add new task">
-      <h2 class="card-title">Add a Task</h2>
-      <form id="addForm" class="add-form" novalidate>
-        <div class="form-row">
-          <div class="field grow">
-            <label for="inputTitle">Title <span class="req">*</span></label>
-            <input id="inputTitle" type="text" placeholder="What needs doing?" maxlength="255" required />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="inputPriority">Priority</label>
-            <select id="inputPriority">
-              <option value="low">🟢 Low</option>
-              <option value="medium" selected>🟡 Medium</option>
-              <option value="high">🔴 High</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="inputDeadline">Deadline</label>
-            <input id="inputDeadline" type="date" />
-          </div>
-          <div class="field submit-field">
-            <label class="sr-only" for="btnAdd">Submit</label>
-            <button id="btnAdd" type="submit" class="btn btn-primary">＋ Add</button>
-          </div>
-        </div>
-        <p class="form-error" id="formError" role="alert" hidden></p>
-      </form>
-    </section>
-
-    <!-- Filter bar -->
-    <section class="filter-bar" aria-label="Filter tasks">
-      <button class="filter-btn active" data-filter="all">All</button>
-      <button class="filter-btn" data-filter="pending">Pending</button>
-      <button class="filter-btn" data-filter="done">Done</button>
-      <span class="filter-sep">|</span>
-      <button class="filter-btn" data-priority="low">🟢 Low</button>
-      <button class="filter-btn" data-priority="medium">🟡 Medium</button>
-      <button class="filter-btn" data-priority="high">🔴 High</button>
-      <button class="filter-btn clear-priority" id="clearPriority" hidden>✕ Priority</button>
-    </section>
-
-    <!-- Task list -->
-    <section aria-label="Task list">
-      <div id="taskList" class="task-list"></div>
-      <p id="emptyMsg" class="empty-msg" hidden>No tasks here yet!</p>
-      <div id="loadingMsg" class="loading-msg">Loading…</div>
-    </section>
-
-  </main>
-
-  <!-- ── Edit Modal ─────────────────────────────────────────────── -->
-  <div id="editModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="Edit task" hidden>
-    <div class="modal-box">
-      <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
-      <h3 class="modal-title">Edit Task</h3>
-      <form id="editForm" novalidate>
-        <input type="hidden" id="editId" />
-        <div class="field">
-          <label for="editTitle">Title <span class="req">*</span></label>
-          <input id="editTitle" type="text" maxlength="255" required />
-        </div>
-        <div class="form-row">
-          <div class="field">
-            <label for="editPriority">Priority</label>
-            <select id="editPriority">
-              <option value="low">🟢 Low</option>
-              <option value="medium">🟡 Medium</option>
-              <option value="high">🔴 High</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="editDeadline">Deadline</label>
-            <input id="editDeadline" type="date" />
-          </div>
-        </div>
-        <p class="form-error" id="editError" role="alert" hidden></p>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-ghost" id="modalCancel">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ── Toast ──────────────────────────────────────────────────── -->
-  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-
-  <script src="/js/app.js"></script>
+    <script src="/js/app.js"></script>
 </body>
+
 </html>
