@@ -1,0 +1,66 @@
+services:
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecret}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE:-dostuff}
+      MYSQL_USER:          ${MYSQL_USER:-dostuff}
+      MYSQL_PASSWORD:      ${MYSQL_PASSWORD:-dostuffsecret}
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d   # init SQL scripts (bind mount 1)
+      - ./data/mysql:/var/lib/mysql                 # persistent data    (bind mount 2)
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1",
+             "-u", "${MYSQL_USER:-dostuff}", "-p${MYSQL_PASSWORD:-dostuffsecret}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 40s
+      retries: 5
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      DB_HOST:     db
+      DB_PORT:     3306
+      DB_NAME:     ${MYSQL_DATABASE:-dostuff}
+      DB_USER:     ${MYSQL_USER:-dostuff}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-dostuffsecret}
+    expose:
+      - "8000"
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    networks:
+      - app-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/nginx-health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+networks:
+  app-network:
+    driver: bridge
